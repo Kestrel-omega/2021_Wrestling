@@ -11,9 +11,9 @@
 
 // Pinmap setting for arduino mega 2560
 #define IR1 A0
-#define IR2 A1
-#define IR3 A2
-#define IR4 A3
+#define IR2 A2
+#define IR3 A4
+#define IR4 A6
 #define SDApin1 2
 #define SDApin2 3
 #define SDApin3 4
@@ -57,7 +57,7 @@ void InitBot(struct SoftwareSerial mySerial, int baudrate);             // Initi
 float ReadIRSensor(int idx);    // Read IR sensor to get a distance from obstacles (idx : 0~3)
 
 // Color sensor library
-void ReadColorSensor(struct Adafruit_TCS34725softi2c tcs, struct Color color); // Read color sensor in r, g, b value
+struct Color ReadColorSensor(struct Adafruit_TCS34725softi2c tcs); // Read color sensor in r, g, b value
 
 // Motor control library
 void SetPWMfrequency(int freq);                     // Set motor PWM frequency

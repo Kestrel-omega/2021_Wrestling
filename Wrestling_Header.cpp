@@ -29,13 +29,17 @@ float ReadIRSensor(int idx) // Read IR sensor to get a distance from obstacles
 }
 
 // Color sensor library
-void ReadColorSensor(struct Adafruit_TCS34725softi2c tcs, struct Color color) // Read color sensor in r, g, b value
+struct Color ReadColorSensor(struct Adafruit_TCS34725softi2c tcs) // Read color sensor in r, g, b value
 {
-    uint16_t clear, red, green, blue;
-    tcs.getRawData(&red, &green, &blue, &clear);
-    color.red = (float)red;
-    color.green = (float)green;
-    color.blue = (float)blue;
+    uint16_t c, r, g, b;
+    Color color;
+    
+    tcs.getRawData(&r, &g, &b, &c);
+    color.red = (float)r;
+    color.green = (float)g;
+    color.blue = (float)b;
+    
+    return color;
 }
 
 // Motor control library
@@ -169,5 +173,5 @@ void InitBot(struct SoftwareSerial mySerial, int baudrate) // Initialize all of 
     InitIRSensor();
     InitColorSensor();
     InitMotorControl();
-    InitCamSerial(struct SoftwareSerial mySerial, baudrate);
+    InitCamSerial(mySerial, baudrate);
 }
