@@ -141,18 +141,18 @@ void ReadCamData(struct SoftwareSerial mySerial, int &x_value, int &y_value, int
 }
 
 // Initialize
-void InitIRSensor(void) // Initialize IR sensors
+void InitIRSensor() // Initialize IR sensors
 {
     pinMode(A0, INPUT);
     pinMode(A1, INPUT);
     pinMode(A2, INPUT);
     pinMode(A3, INPUT);
 }
-void InitColorSensor(void) // Initialize color sensors
+void InitColorSensor() // Initialize color sensors
 {
     // Actually, Color sensor is no need to initialize
 }
-void InitMotorControl(void) // Initialize motor settings (All Enable, All Stop)
+void InitMotorControl() // Initialize motor settings (All Enable, All Stop)
 {
     MotorActiveStatus(R1, ON);
     MotorActiveStatus(R2, ON);
