@@ -47,9 +47,9 @@ struct Color
 };
 
 // Initialize
-void InitIRSensor(void);        // Initialize IR sensors
-void InitColorSensor(void);     // Initialize color sensors
-void InitMotorControl(void);    // Initialize motor settings
+void InitIRSensor();        // Initialize IR sensors
+void InitColorSensor();     // Initialize color sensors
+void InitMotorControl();    // Initialize motor settings
 void InitCamSerial(struct SoftwareSerial mySerial, int baudrate);       // Initialize jetson - arduino serial communication settings
 void InitBot(struct SoftwareSerial mySerial, int baudrate);             // Initialize all of things
 
