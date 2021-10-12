@@ -18,14 +18,14 @@
 #define SDApin2 3
 #define SDApin3 4
 #define SDApin4 5
-#define RPWM1 6
-#define R_EN1 7
-#define LPWM1 8
-#define L_EN1 9
-#define RPWM2 10
-#define R_EN2 11
-#define LPWM2 12
-#define L_EN2 13
+#define L_EN1 13
+#define R_EN1 12
+#define L_PWM1 11 //back
+#define R_PWM1 10 //forward
+#define L_EN2 9
+#define R_EN2 8
+#define L_PWM2 7  // forward
+#define R_PWM2 6 //back
 #define TX1 18
 #define RX1 19
 #define SCLpin 20
@@ -49,7 +49,7 @@ struct Color
 // Initialize
 void InitIRSensor();        // Initialize IR sensors
 void InitColorSensor();     // Initialize color sensors
-void InitMotorControl();    // Initialize motor settings
+void InitMotor();    // Initialize motor settings
 void InitCamSerial(struct SoftwareSerial mySerial, int baudrate);       // Initialize jetson - arduino serial communication settings
 void InitBot(struct SoftwareSerial mySerial, int baudrate);             // Initialize all of things
 
@@ -60,10 +60,8 @@ float ReadIRSensor(int idx);    // Read IR sensor to get a distance from obstacl
 struct Color ReadColorSensor(struct Adafruit_TCS34725softi2c tcs); // Read color sensor in r, g, b value
 
 // Motor control library
-void SetPWMfrequency(int freq);                     // Set motor PWM frequency
-void MotorActiveStatus(int side, bool status);   // Set motor turn on/off
-void SetMotorSpeed(int side,byte pwm);              // Set motor PWM
-void StopMotor(int side);                           // Stop motor
+void StopMotor(); // shut down all motor
+void MotorActiveStatus(int a); // Set motor turn on/off, a==1: turn on, a==0 : turn off
 
 // Camera serial library
 void ReadCamData(struct SoftwareSerial mySerial, int &x_value, int &y_value, int &size_value);          // Read camera data from jetson nano

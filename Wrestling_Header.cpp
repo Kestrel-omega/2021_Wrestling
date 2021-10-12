@@ -16,11 +16,11 @@ float ReadIRSensor(int idx) // Read IR sensor to get a distance from obstacles
         break;
 
     case 2:
-        sensorValue = analogRead(IR3);
+        sensorValue = analogRead(A3);
         break;
 
     case 3:
-        sensorValue = analogRead(IR4);
+        sensorValue = analogRead(A3);
         break;
     }
     float cm = 10650.08 * pow(sensorValue, -0.935) - 10; // need to check
@@ -31,81 +31,72 @@ float ReadIRSensor(int idx) // Read IR sensor to get a distance from obstacles
 // Color sensor library
 struct Color ReadColorSensor(struct Adafruit_TCS34725softi2c tcs) // Read color sensor in r, g, b value
 {
-    uint16_t c, r, g, b;
+    uint16_t clear, red, green, blue;
+    uint32_t sum = clear;
+    float r, g ,b;
+
+
     Color color;
-    
-    tcs.getRawData(&r, &g, &b, &c);
-    color.red = (float)r;
-    color.green = (float)g;
-    color.blue = (float)b;
+    tcs.setInterrupt(false);
+    delay(60);
+
+    tcs.getRawData(&red, &green, &blue, &clear);	
+    tcs.setInterrupt(true);
+  
+    r = red ; r /= 256;
+    g = green; g /=256;
+    b = blue; b/= 256;
+  
+        
+
+    color.red = red;
+    color.green = green;
+    color.blue = blue;
     
     return color;
 }
 
 // Motor control library
-void SetPWMfrequency(int freq) // Set motor PWM frequency
+
+void InitMotor()
 {
-    TCCR0B = TCCR0B & 0b11111000 | freq; // need to check
+  for(int i=6;i<14;i++)
+  {
+	pinMode(i,OUTPUT);
+	digitalWrite(i,LOW);
+  }
 }
-void MotorActiveStatus(int side, bool status) // Set motor turn on/off
+
+void StopMotor() // shut down all motor
 {
-    switch (side)
-    {
-    case R1:
-        digitalWrite(R_EN1, status);
-        break;
-    case R2:
-        digitalWrite(R_EN2, status);
-        break;
-    case L1:
-        digitalWrite(L_EN1, status);
-        break;
-    case L2:
-        digitalWrite(L_EN2, status);
-        break;
-    default:
-        break;
-    }
+   digitalWrite(R_EN1,LOW);
+   digitalWrite(L_EN1,LOW);
+   digitalWrite(R_EN2,LOW);
+   digitalWrite(L_EN2,LOW);	
+   analogWrite(R_PWM1,0);
+   analogWrite(L_PWM1,0);
+   analogWrite(R_PWM2,0);
+   analogWrite(L_PWM2,0);
 }
-void SetMotorSpeed(int side, byte pwm) // Set motor PWM
+
+void MotorActiveStatus(int a) // Set motor turn on/off
 {
-    switch (side)
-    {
-    case R1:
-        digitalWrite(RPWM1, pwm);
-        break;
-    case R2:
-        digitalWrite(RPWM2, pwm);
-        break;
-    case L1:
-        digitalWrite(LPWM1, pwm);
-        break;
-    case L2:
-        digitalWrite(LPWM2, pwm);
-        break;
-    default:
-        break;
-    }
-}
-void StopMotor(int side) // Stop motor
-{
-    switch (side)
-    {
-    case R1:
-        digitalWrite(RPWM1, LOW);
-        break;
-    case R2:
-        digitalWrite(RPWM2, LOW);
-        break;
-    case L1:
-        digitalWrite(LPWM1, LOW);
-        break;
-    case L2:
-        digitalWrite(LPWM2, LOW);
-        break;
-    default:
-        break;
-    }
+	if(a == 1)
+	{
+	  digitalWrite(R_EN1,HIGH);
+      digitalWrite(L_EN1,HIGH);
+	  digitalWrite(R_EN2,HIGH);
+	  digitalWrite(L_EN2,HIGH);	
+	}
+	
+	else if(a==0)
+	{
+	  digitalWrite(R_EN1,LOW);
+      digitalWrite(L_EN1,LOW);
+	  digitalWrite(R_EN2,LOW);
+	  digitalWrite(L_EN2,LOW);		
+	}
+
 }
 
 // Camera serial library
@@ -143,26 +134,16 @@ void ReadCamData(struct SoftwareSerial mySerial, int &x_value, int &y_value, int
 // Initialize
 void InitIRSensor() // Initialize IR sensors
 {
-    pinMode(A0, INPUT);
-    pinMode(A1, INPUT);
-    pinMode(A2, INPUT);
-    pinMode(A3, INPUT);
+    pinMode(IR1, INPUT);
+    pinMode(IR2, INPUT);
+    pinMode(IR3, INPUT);
+    pinMode(IR4, INPUT);
 }
-void InitColorSensor() // Initialize color sensors
+void InitColorSensor(void) // Initialize color sensors
 {
     // Actually, Color sensor is no need to initialize
 }
-void InitMotorControl() // Initialize motor settings (All Enable, All Stop)
-{
-    MotorActiveStatus(R1, ON);
-    MotorActiveStatus(R2, ON);
-    MotorActiveStatus(L1, ON);
-    MotorActiveStatus(L2, ON);
-    StopMotor(R1);
-    StopMotor(R2);
-    StopMotor(L1);
-    StopMotor(L2);
-}
+
 void InitCamSerial(struct SoftwareSerial mySerial, int baudrate) // Initialize jetson - arduino serial communication settings
 {
     Serial.begin(baudrate);
@@ -172,6 +153,5 @@ void InitBot(struct SoftwareSerial mySerial, int baudrate) // Initialize all of 
 {
     InitIRSensor();
     InitColorSensor();
-    InitMotorControl();
-    InitCamSerial(mySerial, baudrate);
+	InitCamSerial(mySerial, baudrate);
 }
