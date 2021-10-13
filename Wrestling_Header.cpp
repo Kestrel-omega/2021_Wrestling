@@ -16,11 +16,11 @@ float ReadIRSensor(int idx) // Read IR sensor to get a distance from obstacles
         break;
 
     case 2:
-        sensorValue = analogRead(A3);
+        sensorValue = analogRead(IR3);
         break;
 
     case 3:
-        sensorValue = analogRead(A3);
+        sensorValue = analogRead(IR4);
         break;
     }
     float cm = 10650.08 * pow(sensorValue, -0.935) - 10; // need to check
