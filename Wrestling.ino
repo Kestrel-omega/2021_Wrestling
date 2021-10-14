@@ -73,6 +73,17 @@ void loop()
           analogWrite(R_PWM1,255*abs(a/320));
           analogWrite(R_PWM2,255*abs(a/320));
          }
+         
+         if(Color_left())
+         {
+          analogWrite(R_PWM1,200);
+          analogWrite(R_PWM2,100); 
+         }
+         else if(Color_right())
+         {
+          analogWrite(R_PWM1,100);
+          analogWrite(R_PWM2,200); 
+         }
     
           
         }
