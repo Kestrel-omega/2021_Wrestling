@@ -28,7 +28,7 @@ float ReadIRSensor(int idx) // Read IR sensor to get a distance from obstacles
 	return cm;
 }
 
-IR_safe()
+void IR_safe()
 {
 	ReadIRSensor(1) >= 25  && ReadIRSensor(2) >= 25  && ReadIRSensor(3) >= 25;
 }
@@ -68,11 +68,11 @@ void Color_black()
 	color[0].red < 000 &&  color[0].blue < 000 && color[1].red < 000 &&  color[1].blue < 000 && color[2].red < 000 &&  color[2].blue < 000 && color[3].red < 000 &&  color[3].blue < 000 ; 
 }
 
-void color_red_front()
+void Color_red_front()
 {
 	return (color[0].red>123) || (color[1].red >123); // red 수정필요	
 }
-void color_red_back()
+void Color_red_back()
 {
 	return (color[2].red>123) || (color[3].red >123);//red 수정필요
 }
