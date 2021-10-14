@@ -70,6 +70,7 @@ void StopMotor(); // shut down all motor
 void MotorActiveStatus(int a); // Set motor turn on/off, a==1: turn on, a==0 : turn off
 
 // Camera serial library
+void Cam_found();
 void ReadCamData(struct SoftwareSerial mySerial, int &x_value, int &y_value, int &size_value);          // Read camera data from jetson nano
 
 #endif
