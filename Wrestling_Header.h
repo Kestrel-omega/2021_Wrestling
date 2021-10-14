@@ -54,9 +54,13 @@ void InitCamSerial(struct SoftwareSerial mySerial, int baudrate);       // Initi
 void InitBot(struct SoftwareSerial mySerial, int baudrate);             // Initialize all of things
 
 // IR sensor library
+void IR_safe(); // IR 2,3,4 far from 25cm
 float ReadIRSensor(int idx);    // Read IR sensor to get a distance from obstacles (idx : 0~3)
 
 // Color sensor library
+void Color_black(); //color0,1,2,3 all black
+void Color_red_front(); //color 0 or 1 is red
+void Color_red_back(); // color 2 or 3 is red
 struct Color ReadColorSensor(struct Adafruit_TCS34725softi2c tcs); // Read color sensor in r, g, b value
 
 // Motor control library
