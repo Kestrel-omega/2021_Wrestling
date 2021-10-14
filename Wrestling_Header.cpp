@@ -30,7 +30,7 @@ float ReadIRSensor(int idx) // Read IR sensor to get a distance from obstacles
 
 IR_safe()
 {
-	ReadIRSensor(0) >= 25 && ReadIRSensor(1) >= 25  && ReadIRSensor(2) >= 25  && ReadIRSensor(3) >= 25;
+	ReadIRSensor(1) >= 25  && ReadIRSensor(2) >= 25  && ReadIRSensor(3) >= 25;
 }
 }
 }
@@ -63,11 +63,18 @@ struct Color ReadColorSensor(struct Adafruit_TCS34725softi2c tcs) // Read color 
 	return color;
 }
 
-Color_black()
+void Color_black()
 {
-	
-	 color[0].red < 000 &&  color[0].blue < 000 && color[1].red < 000 &&  color[1].blue < 000 && color[2].red < 000 &&  color[2].blue < 000 && color[3].red < 000 &&  color[3].blue < 000 ;
-	 
+	color[0].red < 000 &&  color[0].blue < 000 && color[1].red < 000 &&  color[1].blue < 000 && color[2].red < 000 &&  color[2].blue < 000 && color[3].red < 000 &&  color[3].blue < 000 ; 
+}
+
+void color_red_front()
+{
+	return (color[0].red>123) || (color[1].red >123); // red 수정필요	
+}
+void color_red_back()
+{
+	return (color[2].red>123) || (color[3].red >123);//red 수정필요
 }
 
 // Motor control library
