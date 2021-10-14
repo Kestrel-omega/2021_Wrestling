@@ -61,6 +61,7 @@ float ReadIRSensor(int idx);    // Read IR sensor to get a distance from obstacl
 void Color_black(); //color0,1,2,3 all black
 void Color_red_front(); //color 0 or 1 is red
 void Color_red_back(); // color 2 or 3 is red
+void Color_left();
 struct Color ReadColorSensor(struct Adafruit_TCS34725softi2c tcs); // Read color sensor in r, g, b value
 
 // Motor control library
