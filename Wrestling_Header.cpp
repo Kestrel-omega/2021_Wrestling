@@ -82,6 +82,12 @@ void Color_left()
 {
 	return (color[0].red > 123 || color[0].blue > 123 || color[2].red > 123 || color[2].blue > 123) ;
 }
+
+void Color_right()
+{
+	return (color[1].red > 123 || color[1].blue > 123 || color[3].red > 123 || color[3].blue > 123) ;
+}
+
 // Motor control library
 
 void InitMotor()
