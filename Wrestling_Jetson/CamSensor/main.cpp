@@ -64,7 +64,7 @@ int main()
   int capture_height = 720;
   int display_width = 640;
   int display_height = 360;
-  int framerate = 60;
+  int framerate = 10;
   int flip_method = 0;
   int x, y;
 
@@ -144,28 +144,70 @@ int main()
     findContours(contour_image, contour, RETR_EXTERNAL, CHAIN_APPROX_NONE);
     for (size_t i = 0; i < contour.size(); i++)
     {
+      size_t Csize = contour[i].size();
+      if(Csize >= 999)
+      {
+        Csize = 999;
+      }
       if (contour[i].size() > 60)
       {
         drawContours(result, contour, i, Scalar(255, 0, 255), 2);
         RotatedRect color = fitEllipse(contour[i]);
         COM = color.center;
+        
         if (COM.x < 0 || COM.y < 0)
           continue;
         circle(result, COM, 5, Scalar(255, 255, 255), 2, -1);
 
         char cam_data[SIZE_STRING];
-        sprintf(cam_data, "%d,%d\n", (int)COM.x, contour[i].size());
-
+        if((int)COM.x < 100)
+        {
+          if((int)COM.x < 10)
+          {
+            if(Csize < 100)
+            {
+              sprintf(cam_data, "00%d,0%d\n", (int)COM.x, Csize);
+            }
+            else
+            {
+              sprintf(cam_data, "00%d,%d\n", (int)COM.x, Csize);
+            }
+          }
+          else
+          {
+            if(Csize < 100)
+            {
+              sprintf(cam_data, "0%d,0%d\n", (int)COM.x, Csize);
+            }
+            else
+            {
+              sprintf(cam_data, "0%d,%d\n", (int)COM.x, Csize);
+            }
+          }
+        }
+        else
+        {
+          if(Csize < 100)
+            {
+              sprintf(cam_data, "%d,0%d\n", (int)COM.x, Csize);
+            }
+            else
+            {
+              sprintf(cam_data, "%d,%d\n", (int)COM.x, Csize);
+            }
+        }
+        
         printf("send : %s\r\n", cam_data);
 
-        u.sendUart((unsigned char*)cam_data);
+        u.sendUart((unsigned char *)cam_data);
       }
-      else;
+      else
+        ;
     }
     imshow("color", color_mask);
     imshow("result", result);
 
-    int keycode = waitKey(1) & 0xff;
+    int keycode = waitKey(100) & 0xff;
     if (keycode == 27)
       break;
   }

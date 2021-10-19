@@ -15,7 +15,7 @@
 #define     NSERIAL_CHAR   256
 #define     VMINX          1
 #define     BAUDRATE       B2400
-#define     SIZE_STRING    18
+#define     SIZE_STRING    8
 
 class Uart {
 private:
