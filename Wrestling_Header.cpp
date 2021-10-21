@@ -1,193 +1,74 @@
-#include "Wrestling_Header.h"
+#pragma once
+#ifndef __WRESTLING_HEADER_H__
+#define __WRESTLING_HEADER_H__
 
-// IR sensor library
-float ReadIRSensor(int idx) // Read IR sensor to get a distance from obstacles
+#include <Arduino.h>
+#include <SoftwareSerial.h>
+#include <Wire.h>
+#include <String.h>
+#include <stdio.h>
+#include "Adafruit_TCS34725softi2c.h"
+
+// Pinmap setting for arduino mega 2560
+#define IR1 A0
+#define IR2 A2
+#define IR3 A4
+#define IR4 A6
+#define SDApin1 2
+#define SDApin2 3
+#define SDApin3 4
+#define SDApin4 5
+#define L_EN1 13
+#define R_EN1 12
+#define L_PWM1 11 //back
+#define R_PWM1 10 //forward
+#define L_EN2 9
+#define R_EN2 8
+#define L_PWM2 6  // forward
+#define R_PWM2 7 //back
+#define TX1 18
+#define RX1 19
+#define SCLpin 21
+
+// Macro of motor
+#define ON true
+#define OFF false
+#define R1 101
+#define R2 102
+#define L1 111
+#define L2 112
+
+// Declare color class
+struct Color
 {
-	float sensorValue = 0;
-
-	switch (idx)
-	{
-		case 0:
-		sensorValue = analogRead(IR1);
-		break;
-
-		case 1:
-		sensorValue = analogRead(IR2);
-		break;
-
-		case 2:
-		sensorValue = analogRead(IR3);
-		break;
-
-		case 3:
-		sensorValue = analogRead(IR4);
-		break;
-	}
-	float cm = 10650.08 * pow(sensorValue, -0.935) - 10; // need to check
-
-	return cm;
-}
-
-void IR_safe()
-{
-	ReadIRSensor(1) >= 25  && ReadIRSensor(2) >= 25  && ReadIRSensor(3) >= 25;
-}
-}
-}
-
-// Color sensor library
-struct Color ReadColorSensor(struct Adafruit_TCS34725softi2c tcs) // Read color sensor in r, g, b value
-{
-	uint16_t clear, red, green, blue;
-	uint32_t sum = clear;
-	float r, g ,b;
-
-
-	Color color;
-	tcs.setInterrupt(false);
-	delay(60);
-
-	tcs.getRawData(&red, &green, &blue, &clear);
-	tcs.setInterrupt(true);
-	
-	r = red ; r /= 256;
-	g = green; g /=256;
-	b = blue; b/= 256;
-	
-	
-
-	color.red = red;
-	color.green = green;
-	color.blue = blue;
-	
-	return color;
-}
-
-void Color_black()
-{
-	color[0].red < 000 &&  color[0].blue < 000 && color[1].red < 000 &&  color[1].blue < 000 && color[2].red < 000 &&  color[2].blue < 000 && color[3].red < 000 &&  color[3].blue < 000 ; 
-}
-
-void Color_red_front()
-{
-	return (color[0].red>123) || (color[1].red >123); // red 수정필요	
-}
-
-void Color_red_back()
-{
-	return (color[2].red>123) || (color[3].red >123);//red 수정필요
-}
-
-void Color_left()
-{
-	return (color[0].red > 123 || color[0].blue > 123 || color[2].red > 123 || color[2].blue > 123) ;
-}
-
-void Color_right()
-{
-	return (color[1].red > 123 || color[1].blue > 123 || color[3].red > 123 || color[3].blue > 123) ;
-}
-
-// Motor control library
-
-void InitMotor()
-{
-	for(int i=6;i<14;i++)
-	{
-		pinMode(i,OUTPUT);
-		digitalWrite(i,LOW);
-	}
-}
-
-void StopMotor() // shut down all motor
-{
-	digitalWrite(R_EN1,LOW);
-	digitalWrite(L_EN1,LOW);
-	digitalWrite(R_EN2,LOW);
-	digitalWrite(L_EN2,LOW);
-	analogWrite(R_PWM1,0);
-	analogWrite(L_PWM1,0);
-	analogWrite(R_PWM2,0);
-	analogWrite(L_PWM2,0);
-}
-
-void MotorActiveStatus(int a) // Set motor turn on/off
-{
-	if(a == 1)
-	{
-		digitalWrite(R_EN1,HIGH);
-		digitalWrite(L_EN1,HIGH);
-		digitalWrite(R_EN2,HIGH);
-		digitalWrite(L_EN2,HIGH);
-	}
-	
-	else if(a==0)
-	{
-		digitalWrite(R_EN1,LOW);
-		digitalWrite(L_EN1,LOW);
-		digitalWrite(R_EN2,LOW);
-		digitalWrite(L_EN2,LOW);
-	}
-
-}
-
-// Camera serial library
-void Cam_found()
-{
-	//find!find!find!find!find!find!find!find!find!find!find!
-}
-void ReadCamData(struct SoftwareSerial mySerial, int &x_value, int &y_value, int &size_value) // Read camera data from jetson nano
-{
-	char Buffer[30];
-
-	if (mySerial.available())
-	{
-		String inString = mySerial.readStringUntil('\n');
-
-		int index1 = inString.indexOf(',');
-		int index2 = inString.indexOf(',', index1 + 1);
-		int index3 = inString.indexOf(',', index2 + 1);
-		int index4 = inString.indexOf(',', index3 + 1);
-		int index5 = inString.indexOf(',', index4 + 1);
-
-		int inString1 = inString.substring(0, index1).toInt();
-		int inString2 = inString.substring(index1 + 1, index2).toInt();
-		int inString3 = inString.substring(index2 + 1, index3).toInt();
-		int inString4 = inString.substring(index3 + 1, index4).toInt();
-		int inString5 = inString.substring(index4 + 1, index5).toInt();
-
-		if (inString1 == -1 && inString5 == -2)
-		{
-			sprintf(Buffer, "x : %d, y : %d, size : %d \n", inString2, inString3, inString4);
-			x_value = inString2;
-			y_value = inString3;
-			size_value = inString4;
-			Serial.print(Buffer);
-		}
-	}
-}
+    float red;
+    float green;
+    float blue;
+};
 
 // Initialize
-void InitIRSensor() // Initialize IR sensors
-{
-	pinMode(IR1, INPUT);
-	pinMode(IR2, INPUT);
-	pinMode(IR3, INPUT);
-	pinMode(IR4, INPUT);
-}
-void InitColorSensor(void) // Initialize color sensors
-{
-	// Actually, Color sensor is no need to initialize
-}
+void InitIRSensor();        // Initialize IR sensors
+void InitColorSensor();     // Initialize color sensors
+void InitMotor();    // Initialize motor settings
+void InitCamSerial(struct SoftwareSerial mySerial, int baudrate);       // Initialize jetson - arduino serial communication settings
+void InitBot(struct SoftwareSerial mySerial, int baudrate);             // Initialize all of things
 
-void InitCamSerial(struct SoftwareSerial mySerial, int baudrate) // Initialize jetson - arduino serial communication settings
-{
-	Serial.begin(baudrate);
-	mySerial.begin(baudrate);
-}
-void InitBot(struct SoftwareSerial mySerial, int baudrate) // Initialize all of things
-{
-	InitIRSensor();
-	InitColorSensor();
-	InitCamSerial(mySerial, baudrate);
-}
+// IR sensor library
+bool IR_safe(); // IR 2,3,4 far from 25cm
+float ReadIRSensor(int idx);    // Read IR sensor to get a distance from obstacles (idx : 0~3)
+
+// Color sensor library
+
+
+struct Color ReadColorSensor(struct Adafruit_TCS34725softi2c tcs); // Read color sensor in r, g, b value
+
+// Motor control library
+void StopMotor(); // shut down all motor
+void MotorActiveStatus(int a); // Set motor turn on/off, a==1: turn on, a==0 : turn off
+
+// Camera serial library
+//bool Cam_found();
+//void ReadCamData();
+//void ReadCamData(struct SoftwareSerial mySerial, int &x_value, int &y_value, int &size_value);          // Read camera data from jetson nano
+
+#endif
