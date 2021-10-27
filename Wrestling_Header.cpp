@@ -43,7 +43,7 @@ struct Color ReadColorSensor(struct Adafruit_TCS34725softi2c tcs) // Read color 
 
 	Color color;
 	tcs.setInterrupt(false);
-	delay(60);
+	delay(30);
 
 	tcs.getRawData(&red, &green, &blue, &clear);
 	tcs.setInterrupt(true);
@@ -63,7 +63,7 @@ struct Color ReadColorSensor(struct Adafruit_TCS34725softi2c tcs) // Read color 
 
 // Motor control library
 void InitMotor()
-{0
+{
 	for(int i=6;i<14;i++)
 	{
 		pinMode(i,OUTPUT);
@@ -77,10 +77,10 @@ void StopMotor() // shut down all motor
 	digitalWrite(L_EN1,LOW);
 	digitalWrite(R_EN2,LOW);
 	digitalWrite(L_EN2,LOW);
-	analogWrite(R_PWM1,0);
-	analogWrite(L_PWM1,0);
-	analogWrite(R_PWM2,0);
-	analogWrite(L_PWM2,0);
+	analogWrite(PWM_LF,0);
+	analogWrite(PWM_LB,0);
+	analogWrite(PWM_RF,0);
+	analogWrite(PWM_RB,0);
 }
 
 void MotorActiveStatus(int a) // Set motor turn on/off

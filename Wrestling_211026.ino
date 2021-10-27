@@ -199,12 +199,9 @@ void loop()
     }
     /****stop motor****/
     Serial.println("Something Found!");
-    analogWrite(PWM_LB, 0);
-    analogWrite(PWM_RF, 0);
-    analogWrite(PWM_LF, 0);
-    analogWrite(PWM_RB, 0);
+    StopMotor();
   }
-  if (Not_found() == false) // 상대방 발견
+  else if (Not_found() == false) // 상대방 발견
   {
     ReadCamData();
     CAM_Serial();
@@ -345,24 +342,22 @@ void loop()
         analogWrite(PWM_RB, 50);
       }
     }
-    else if (Color_black() && ReadIRSensor(3) < IR_near) // 검정에서 뒤쪽 가까움
+  }
+  else if (Color_black() && ReadIRSensor(3) < IR_near) // 검정에서 뒤쪽 가까움
+  {
+    Serial.println("Back Wall");
+    while (ReadIRSensor(3) < IR_near)
     {
-      Serial.println("Back Wall");
-      while (ReadIRSensor(3) < IR_near)
-      {
-        analogWrite(PWM_LB, 0);
-        analogWrite(PWM_RB, 0);
-        analogWrite(PWM_LF, 50);
-        analogWrite(PWM_RF, 50);
-      }
-    }
-    else
-    {
-      Serial.println("No Black Floor");
       analogWrite(PWM_LB, 0);
-      analogWrite(PWM_RF, 0);
-      analogWrite(PWM_LF, 0);
       analogWrite(PWM_RB, 0);
+      analogWrite(PWM_LF, 50);
+      analogWrite(PWM_RF, 50);
     }
   }
-  /***********loop finish***********/
+  else
+  {
+    Serial.println("No Black Floor");
+    StopMotor();
+  }
+}
+/***********loop finish***********/

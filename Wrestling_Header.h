@@ -20,12 +20,12 @@
 #define SDApin4 5
 #define L_EN1 13
 #define R_EN1 12
-#define L_PWM1 11 //back
-#define R_PWM1 10 //forward
+#define PWM_LB 11 // left back
+#define PWM_LF 10 // left front
 #define L_EN2 9
 #define R_EN2 8
-#define L_PWM2 6  // forward
-#define R_PWM2 7 //back
+#define PWM_RB 6  // right back
+#define PWM_RF 7  // right front
 #define TX1 18
 #define RX1 19
 #define SCLpin 21
