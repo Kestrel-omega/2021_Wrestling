@@ -10,6 +10,12 @@
 #define color3blue 100
 #define Cam_near 300
 
+#define CAMRANGE 10
+
+#define RIGHT 40
+#define MID 41
+#define LEFT 42
+
 #define IR_near 50
 
 SoftwareSerial mySerial(52, 50); // RX, TX
@@ -18,12 +24,24 @@ int x_data;
 int size_data;
 
 // Declare classes for color sensors
-Adafruit_TCS34725softi2c tcs1 = Adafruit_TCS34725softi2c(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X, SDApin1, SCLpin);
-Adafruit_TCS34725softi2c tcs2 = Adafruit_TCS34725softi2c(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X, SDApin2, SCLpin);
-Adafruit_TCS34725softi2c tcs3 = Adafruit_TCS34725softi2c(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X, SDApin3, SCLpin);
-Adafruit_TCS34725softi2c tcs4 = Adafruit_TCS34725softi2c(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X, SDApin4, SCLpin);
+Adafruit_TCS34725softi2c tcs1 = Adafruit_TCS34725softi2c(TCS34725_INTEGRATIONTIME_24MS, TCS34725_GAIN_4X, SDApin1, SCLpin);
+Adafruit_TCS34725softi2c tcs2 = Adafruit_TCS34725softi2c(TCS34725_INTEGRATIONTIME_24MS, TCS34725_GAIN_4X, SDApin2, SCLpin);
+Adafruit_TCS34725softi2c tcs3 = Adafruit_TCS34725softi2c(TCS34725_INTEGRATIONTIME_24MS, TCS34725_GAIN_4X, SDApin3, SCLpin);
+Adafruit_TCS34725softi2c tcs4 = Adafruit_TCS34725softi2c(TCS34725_INTEGRATIONTIME_24MS, TCS34725_GAIN_4X, SDApin4, SCLpin);
 struct Color color[4];
 
+int Cam_direction(int x_data)
+{
+  int left_thres = CAMMID - CAMRANGE;
+  int right_thres = CAMMID + CAMRANGE;
+
+  if (x_data < left_thres)
+    return LEFT;
+  else if (x_data > left_thres)
+    return RIGHT;
+  else
+    return MID;
+}
 /***********컬러색's 주기적으로 읽어***********/
 void Read_color()
 {
@@ -34,8 +52,12 @@ void Read_color()
 
   for (int i = 0; i < 4; i++)
   {
+    Serial.print(i);
+    Serial.print(".R : ");
     Serial.print(color[i].red);
     Serial.print("\t");
+    Serial.print(i);
+    Serial.print(".B : ");
     Serial.println(color[i].blue);
   }
 }
@@ -68,22 +90,32 @@ bool Color_blue_front()
 /***********카메라's 체크해***********/
 int ReadCamData()
 {
-  if (mySerial.available())
+  while (!mySerial.available())
   {
+  }
+  String inString = mySerial.readStringUntil('\n');
 
-    String inString = mySerial.readStringUntil('\n');
-
-    int index1 = inString.indexOf(',');
-    int index2 = inString.length();
+  // Serial.println(inString);
+  // char checksum = inString[0];
+  // Serial.print("checksum : ");
+  // Serial.println(checksum);
+  int index1 = inString.indexOf(',');
+  int index2 = inString.length();
+  // Serial.print("index1 : ");
+  // Serial.print(index1);
+  // Serial.print("\tindex2 : ");
+  // Serial.println(index2);
+  if (index1 == 3 && index2 == 7)
+  {
     x_data = inString.substring(0, index1).toInt();
     size_data = inString.substring(index1 + 1, index2).toInt();
+  }
 
-    return 0;
-  }
-  else
-  {
-    return -1;
-  }
+  Serial.print("Cam - x : ");
+  Serial.print(x_data);
+  Serial.print(", size : ");
+  Serial.println(size_data);
+  return 0;
 }
 bool Not_found()
 {
@@ -137,6 +169,7 @@ void setup()
   }
 
   Serial.begin(9600);
+
   Serial.println("Start");
 }
 
@@ -144,8 +177,8 @@ void loop()
 {
   ReadCamData();
   Read_color();
-  CAM_Serial();
-
+  IR_Serial();
+  Serial.print("\r\n\r\n");
   if (Not_found() == true)
   {
     if (Color_black() && IR_safe()) // chage value red & blue
@@ -154,11 +187,10 @@ void loop()
       while (1) // 캠발견할때까지 제자리회전
       {
         ReadCamData();
-        CAM_Serial();
-        analogWrite(L_PWM1, 0);
-        analogWrite(R_PWM2, 0);
-        analogWrite(R_PWM1, 10);
-        analogWrite(L_PWM2, 10);
+        analogWrite(PWM_LB, 0);
+        analogWrite(PWM_RF, 0);
+        analogWrite(PWM_LF, 20);
+        analogWrite(PWM_RB, 20);
         if ((x_data > 0 && size_data > 0) || IR_safe() == false)
         {
           break;
@@ -167,8 +199,10 @@ void loop()
     }
     /****stop motor****/
     Serial.println("Something Found!");
-    analogWrite(R_PWM1, 0);
-    analogWrite(L_PWM2, 0);
+    analogWrite(PWM_LB, 0);
+    analogWrite(PWM_RF, 0);
+    analogWrite(PWM_LF, 0);
+    analogWrite(PWM_RB, 0);
   }
   if (Not_found() == false) // 상대방 발견
   {
@@ -177,158 +211,158 @@ void loop()
     Serial.println("Enermy Found!");
     int x = CAMMID - x_data; // 상대방 x좌표 반환
 
-    while (size_data < Cam_near) // 상대방과 가까운 위치에 있는 동안
+    while (size_data < Cam_near) // 상대방과 먼 위치에 있는 동안
     {
+      Serial.print("Enermy is far from us! : ");
       ReadCamData();
       CAM_Serial();
-      if (x < 0) // 상대방 우측에 있을때 우회전
-      {
-        analogWrite(R_PWM1, 255 * abs(x / 320));
-        analogWrite(R_PWM2, 0);
-      }
-      else if (x > 0) // 상대방 좌측에 있을때 좌회전
-      {
-        analogWrite(R_PWM1, 0);
-        analogWrite(R_PWM2, 255 * abs(x / 320));
-      }
 
-      // analogWrite(R_PWM1, 0);
-      // analogWrite(L_PWM1, 0);
-      // analogWrite(R_PWM2, 0);
-      // analogWrite(L_PWM2, 0);
-      // delay(1);
+      switch (Cam_direction(x_data))
+      {
+      case LEFT:
+      {
+        Serial.println("LEFT");
+        analogWrite(PWM_RB, 0);
+        analogWrite(PWM_LF, 0);
+        analogWrite(PWM_RF, 50);
+        analogWrite(PWM_LB, 50);
+        break;
+      }
+      case RIGHT:
+      {
+        Serial.println("RIGHT");
+        analogWrite(PWM_RF, 0);
+        analogWrite(PWM_LB, 0);
+        analogWrite(PWM_LF, 50);
+        analogWrite(PWM_RB, 50);
+        break;
+      }
+      case MID:
+      {
+        Serial.println("MID");
+        analogWrite(PWM_LB, 0);
+        analogWrite(PWM_RB, 0);
+        analogWrite(PWM_LF, 100);
+        analogWrite(PWM_RF, 100);
+        break;
+      }
+      default:
+      {
+        break;
+      }
+      }
 
       if (Color_left() == true)
       {
-        analogWrite(R_PWM1, 200);
-        analogWrite(R_PWM2, 100);
+        analogWrite(PWM_LB, 0);
+        analogWrite(PWM_RB, 0);
+        analogWrite(PWM_LF, 70);
+        analogWrite(PWM_RF, 50);
+
+        ;
       }
       else if (Color_right() == true)
       {
-        analogWrite(R_PWM1, 100);
-        analogWrite(R_PWM2, 200);
-        delay(50);
+        analogWrite(PWM_LB, 0);
+        analogWrite(PWM_RB, 0);
+        analogWrite(PWM_LF, 50);
+        analogWrite(PWM_RF, 70);
       }
     }
 
     while (size_data > Cam_near) // 상대방과 일정거리 가까워지면 그동안
     {
+      Serial.print("Enermy is near from us! : ");
       ReadCamData();
       CAM_Serial();
-      Read_color(); //read!read!read!
-      analogWrite(R_PWM1, 200);
-      analogWrite(R_PWM2, 200);
+      int red_count = 0;
+      int x = CAMMID - x_data; // 상대방 x좌표 반환
+      Read_color();            //read!read!read!
+      analogWrite(PWM_LB, 0);
+      analogWrite(PWM_RB, 0);
+      analogWrite(PWM_LF, 200);
+      analogWrite(PWM_RF, 200);
+
       if (ReadIRSensor(0) <= IR_near && Color_red_front() == true) // 컬러 프뤈ㅌ 뤠드 인식- 후진
       {
-        analogWrite(R_PWM1, 0);
-        analogWrite(R_PWM1, 0);
-        delay(1);
-        analogWrite(L_PWM1, 200);
-        analogWrite(L_PWM2, 200);
-        delay(500);
+        analogWrite(PWM_LF, 0);
+        analogWrite(PWM_RF, 0);
+        analogWrite(PWM_LB, 200);
+        analogWrite(PWM_RB, 200);
+        delay(50);
+        red_count++;
+
+        if (red_count == 3)
+        {
+          analogWrite(PWM_RF, 0);
+          analogWrite(PWM_LB, 0);
+          analogWrite(PWM_LF, 200);
+          analogWrite(PWM_RB, 200);
+          red_count = 0;
+        }
       }
     }
   }
-
-  // analogWrite(R_PWM1, 0);
-  // analogWrite(L_PWM1, 0);
-  // analogWrite(R_PWM2, 0);
-  // analogWrite(L_PWM2, 0);
-  // delay(1);
 
   if (Color_black() && ReadIRSensor(1) < IR_near) // 검정에서 왼쪽 가까움
   {
     Serial.println("Left Wall");
     while (ReadIRSensor(1) < IR_near) // 왼쪽에서 멀어질때까지 우회전
     {
-      analogWrite(R_PWM1, 50);
-      analogWrite(R_PWM2, 20);
+      analogWrite(PWM_LB, 0);
+      analogWrite(PWM_RB, 0);
+      analogWrite(PWM_LF, 50);
+      analogWrite(PWM_RF, 20);
 
       IR_Serial();
       Read_color();                                              //read!read!read!
       if (Color_blue_front() == true || Color_red_front == true) //우회전 도중 컬러 인식하는 경우
       {
-        // delay(10);
-
-        analogWrite(L_PWM1, 50);
-        analogWrite(L_PWM2, 50);
-        // delay(300);
+        analogWrite(PWM_LF, 0);
+        analogWrite(PWM_RF, 0);
+        analogWrite(PWM_LB, 50);
+        analogWrite(PWM_RB, 50);
       }
     }
-
-    // analogWrite(R_PWM1, 20);
-    // analogWrite(L_PWM1, 0);
-    // analogWrite(R_PWM2, 0);
-    // analogWrite(L_PWM2, 20);
-    // delay(1);
-
-    // Read_color();//read!read!read!
-
-    // if (Color_left()== true)       // 컬러 왼쪽 인식이면 우회전
-    // {
-    //   analogWrite(R_PWM1, 200);
-    //   analogWrite(R_PWM2, 100);
-    //   delay(50);
-    // }
-    // else if (Color_right() == true) // 컬러 오른쪽 인식이면 좌회전
-    // {
-    //   analogWrite(R_PWM1, 100);
-    //   analogWrite(R_PWM2, 200);
-    // }
   }
   else if (Color_black() && ReadIRSensor(2) < IR_near) // 검정에서 오른쪽 가까움
   {
     Serial.println("Right Wall");
-    while (ReadIRSensor(2) >= IR_near)
+    while (ReadIRSensor(2) < IR_near)
     {
-      analogWrite(R_PWM1, 0);
-      analogWrite(L_PWM1, 20);
-      analogWrite(R_PWM2, 20);
-      analogWrite(L_PWM2, 0);
-      delay(1);
+      analogWrite(PWM_LB, 0);
+      analogWrite(PWM_RB, 0);
+      analogWrite(PWM_LF, 20);
+      analogWrite(PWM_RF, 50);
 
-      // Read_color();//read!read!read!
-      // if (Color_blue_front() == true || Color_red_front == true) //좌회전 도중 컬러 인식하는 경우
-      // {
-      //   delay(10);
-
-      //   analogWrite(L_PWM1, 200);
-      //   analogWrite(L_PWM2, 200);
-      //   delay(300);
-      // }
+      IR_Serial();
+      Read_color();                                              //read!read!read!
+      if (Color_blue_front() == true || Color_red_front == true) //좌회전 도중 컬러 인식하는 경우
+      {
+        analogWrite(PWM_LF, 0);
+        analogWrite(PWM_RF, 0);
+        analogWrite(PWM_LB, 50);
+        analogWrite(PWM_RB, 50);
+      }
+    }
+    else if (Color_black() && ReadIRSensor(3) < IR_near) // 검정에서 뒤쪽 가까움
+    {
+      Serial.println("Back Wall");
+      while (ReadIRSensor(3) < IR_near)
+      {
+        analogWrite(PWM_LB, 0);
+        analogWrite(PWM_RB, 0);
+        analogWrite(PWM_LF, 50);
+        analogWrite(PWM_RF, 50);
+      }
+    }
+    else
+    {
+      Serial.println("No Black Floor");
+      analogWrite(PWM_LB, 0);
+      analogWrite(PWM_RF, 0);
+      analogWrite(PWM_LF, 0);
+      analogWrite(PWM_RB, 0);
     }
   }
-  else if (Color_black() && ReadIRSensor(3) < IR_near) // 검정에서 뒤쪽 가까움
-  {
-    Serial.println("Back Wall");
-    while (ReadIRSensor(3) >= IR_near)
-    {
-      analogWrite(R_PWM1, 50);
-      analogWrite(L_PWM1, 50);
-      analogWrite(R_PWM2, 0);
-      analogWrite(L_PWM2, 0);
-      delay(1);
-
-      // Read_color();                                              //read!read!read!
-      // if (Color_blue_front() == true || Color_red_front == true) //직진 도중 컬러 인식하는 경우
-      // {
-      //   delay(10);
-
-      //   analogWrite(L_PWM1, 200);
-      //   analogWrite(L_PWM2, 200);
-      //   delay(300);
-      // }
-    }
-  }
-  else
-  {
-    Serial.println("No Black Floor");
-  }
-
-  // analogWrite(R_PWM1, 0);
-  // analogWrite(L_PWM1, 0);
-  // analogWrite(R_PWM2, 0);
-  // analogWrite(L_PWM2, 0);
-  // delay(1);
-}
-/***********loop finish***********/
+  /***********loop finish***********/
