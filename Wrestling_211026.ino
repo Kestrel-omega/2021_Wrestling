@@ -10,11 +10,12 @@
 #define color3blue 100
 #define Cam_near 300
 
-#define CAMRANGE 10
+#define CAMRANGE 30
 
 #define RIGHT 40
 #define MID 41
 #define LEFT 42
+#define NONE 43
 
 #define IR_near 50
 
@@ -35,10 +36,12 @@ int Cam_direction(int x_data)
   int left_thres = CAMMID - CAMRANGE;
   int right_thres = CAMMID + CAMRANGE;
 
-  if (x_data < left_thres)
+  if (x_data < left_thres && x_data > 0)
     return LEFT;
-  else if (x_data > left_thres)
+  else if (x_data > right_thres)
     return RIGHT;
+  else if (x_data <= 0)
+    return NONE;
   else
     return MID;
 }
@@ -208,7 +211,7 @@ void loop()
     Serial.println("Enermy Found!");
     int x = CAMMID - x_data; // 상대방 x좌표 반환
 
-    while (size_data < Cam_near) // 상대방과 먼 위치에 있는 동안
+    while (size_data < Cam_near && Cam_direction(x_data) != NONE) // 상대방과 먼 위치에 있는 동안
     {
       Serial.print("Enermy is far from us! : ");
       ReadCamData();
@@ -265,6 +268,8 @@ void loop()
         analogWrite(PWM_LF, 50);
         analogWrite(PWM_RF, 70);
       }
+
+      delay(1);
     }
 
     while (size_data > Cam_near) // 상대방과 일정거리 가까워지면 그동안
@@ -298,6 +303,8 @@ void loop()
           red_count = 0;
         }
       }
+
+      delay(1);
     }
   }
 
