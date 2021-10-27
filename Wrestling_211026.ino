@@ -8,7 +8,7 @@
 #define color2blue 90
 #define color3red 53
 #define color3blue 100
-#define Cam_near 300
+#define Cam_near 500
 
 #define CAMRANGE 30
 
@@ -17,12 +17,13 @@
 #define LEFT 42
 #define NONE 43
 
-#define IR_near 50
+#define IR_near 40
 
-SoftwareSerial mySerial(52, 50); // RX, TX
+SoftwareSerial mySerial(52, 25); // RX, TX
 
 int x_data;
 int size_data;
+int ir_data[4];
 
 // Declare classes for color sensors
 Adafruit_TCS34725softi2c tcs1 = Adafruit_TCS34725softi2c(TCS34725_INTEGRATIONTIME_24MS, TCS34725_GAIN_4X, SDApin1, SCLpin);
@@ -46,23 +47,23 @@ int Cam_direction(int x_data)
     return MID;
 }
 /***********컬러색's 주기적으로 읽어***********/
-void Read_color()
+void ReadColorData()
 {
   color[0] = ReadColorSensor(tcs1);
   color[1] = ReadColorSensor(tcs2);
   color[2] = ReadColorSensor(tcs3);
   color[3] = ReadColorSensor(tcs4);
 
-  for (int i = 0; i < 4; i++)
-  {
-    Serial.print(i);
-    Serial.print(".R : ");
-    Serial.print(color[i].red);
-    Serial.print("\t");
-    Serial.print(i);
-    Serial.print(".B : ");
-    Serial.println(color[i].blue);
-  }
+  // for (int i = 0; i < 4; i++)
+  // {
+  //   Serial.print(i);
+  //   Serial.print(".R : ");
+  //   Serial.print(color[i].red);
+  //   Serial.print("\t");
+  //   Serial.print(i);
+  //   Serial.print(".B : ");
+  //   Serial.println(color[i].blue);
+  // }
 }
 
 bool Color_black()
@@ -93,31 +94,43 @@ bool Color_blue_front()
 /***********카메라's 체크해***********/
 int ReadCamData()
 {
-  while (!mySerial.available())
+  if (mySerial.available())
   {
+    String inString = mySerial.readStringUntil('\n');
+    int index1 = inString.indexOf(',');
+    int index2 = inString.length();
+    if (index1 == 3 && index2 == 7)
+    {
+      x_data = inString.substring(0, index1).toInt();
+      size_data = inString.substring(index1 + 1, index2).toInt();
+    }
+  //x_data = inString.substring(0, index1).toInt();
+  //size_data = inString.substring(index1 + 1, index2).toInt();
   }
-  String inString = mySerial.readStringUntil('\n');
-
-  // Serial.println(inString);
-  // char checksum = inString[0];
-  // Serial.print("checksum : ");
-  // Serial.println(checksum);
-  int index1 = inString.indexOf(',');
-  int index2 = inString.length();
-  // Serial.print("index1 : ");
-  // Serial.print(index1);
-  // Serial.print("\tindex2 : ");
-  // Serial.println(index2);
-  if (index1 == 3 && index2 == 7)
-  {
-    x_data = inString.substring(0, index1).toInt();
-    size_data = inString.substring(index1 + 1, index2).toInt();
-  }
-
   Serial.print("Cam - x : ");
   Serial.print(x_data);
   Serial.print(", size : ");
   Serial.println(size_data);
+  
+  // Serial.println(inString);
+  // char checksum = inString[0];
+  // Serial.print("checksum : ");
+  // Serial.println(checksum);
+  
+  // Serial.print("index1 : ");
+  // Serial.print(index1);
+  // Serial.print("\tindex2 : ");
+  // Serial.println(index2);
+  /*if (index1 == 3 && index2 == 7)
+  {
+    x_data = inString.substring(0, index1).toInt();
+    size_data = inString.substring(index1 + 1, index2).toInt();
+  }
+*/
+  // Serial.print("Cam - x : ");
+  // Serial.print(x_data);
+  // Serial.print(", size : ");
+  // Serial.println(size_data);
   return 0;
 }
 bool Not_found()
@@ -128,23 +141,33 @@ void CAM_Serial()
 {
   Serial.print("Cam : ");
   Serial.println(x_data);
-  delay(50);
+  delay(25);
 }
-/***********IR Sensor***********/
-void IR_Serial()
+void ReadIRData()
 {
-  Serial.print("ir0 :");
-  Serial.print(ReadIRSensor(0));
-  Serial.print('\t');
-  Serial.print("ir1 :");
-  Serial.print(ReadIRSensor(1));
+  // Serial.print("ir0 :");
+  // Serial.print(ReadIRSensor(0));
+  ir_data[0] = ReadIRSensor(0);
+  // Serial.print('\t');
+  // Serial.print("ir1 :");
+  // Serial.print(ReadIRSensor(1));
+  ir_data[1] = ReadIRSensor(1);
   Serial.print('\t');
   Serial.print("ir2 :");
   Serial.print(ReadIRSensor(2));
-  Serial.print('\t');
-  Serial.print("ir3 :");
-  Serial.print(ReadIRSensor(3));
-  Serial.print('\n');
+  ir_data[2] = ReadIRSensor(2);
+  // Serial.print('\t');
+  // Serial.print("ir3 :");
+  // Serial.print(ReadIRSensor(3));
+  ir_data[3] = ReadIRSensor(3);
+  // Serial.print('\n');
+}
+
+void Refresh()
+{
+  ReadColorData();
+  ReadCamData();
+  ReadIRData();
 }
 
 //initialize IR, Color, Motordrive, Camera
@@ -155,12 +178,16 @@ void setup()
   MotorActiveStatus(1); //Motor on!
   delay(10);
 
+  x_data = 0;
+  size_data = 0;
+  ir_data[4] = {NULL};
+
   while (!Serial)
   {
     ;
   }
 
-  mySerial.begin(2400);
+  mySerial.begin(9600);
 
   if (tcs1.begin() && tcs2.begin() && tcs3.begin() && tcs4.begin())
   {
@@ -176,6 +203,150 @@ void setup()
   Serial.println("Start");
 }
 
+void loop()
+{
+  
+    // Get Data
+    Refresh();
+    Serial.println("Got Data");
+
+    // Avoid Red
+    Serial.println("1");
+    if (Color_red_front())
+    {
+      // Refresh();
+      analogWrite(PWM_LF, 0);
+      analogWrite(PWM_LB, 25);
+      analogWrite(PWM_RF, 0);
+      analogWrite(PWM_RB, 55);
+      Serial.println("Avoid Red");
+
+      delay(1000);
+      return;
+    }
+
+    Serial.println("2");
+    // Enermy Found
+    if (size_data != 0)
+    {
+      // Near Enermy -> 급발진
+      if (size_data > Cam_near)
+      {
+        // Refresh();
+        analogWrite(PWM_LF, 100);
+        analogWrite(PWM_LB, 0);
+        analogWrite(PWM_RF, 100);
+        analogWrite(PWM_RB, 0);
+        Serial.println("Near Enermy");
+        return;
+      }
+      else if (size_data > 0 && size_data < Cam_near)
+      {
+        
+        switch (Cam_direction(x_data))
+        {
+        case LEFT:
+        {
+          // Refresh();
+          analogWrite(PWM_RF, 25);
+          analogWrite(PWM_LB, 25);
+          analogWrite(PWM_RB, 0);
+          analogWrite(PWM_LF, 0);
+          Serial.println("Enermy : LEFT");
+          break;
+        }
+        case RIGHT:
+        {
+          // Refresh();
+          analogWrite(PWM_RF, 0);
+          analogWrite(PWM_LB, 0);
+          analogWrite(PWM_LF, 25);
+          analogWrite(PWM_RB, 25);
+          Serial.println("Enermy : RIGHT");
+          break;
+        }
+        case MID:
+        {
+          // Refresh();
+          analogWrite(PWM_LB, 0);
+          analogWrite(PWM_RB, 0);
+          analogWrite(PWM_LF, 100);
+          analogWrite(PWM_RF, 100);
+          Serial.println("Enermy : MID");
+          break;
+        }
+        default:
+        {
+          break;
+        }
+        }
+        return;
+      }
+    }
+
+    // Find Wall
+    else if (size_data == 0)
+    {
+      // Left Wall
+      if (ir_data[1] < IR_near)
+      {
+        // Refresh();
+        analogWrite(PWM_LF, 25);
+        analogWrite(PWM_LB, 0);
+        analogWrite(PWM_RF, 20);
+        analogWrite(PWM_RB, 0);
+        delay(1000);
+        Serial.println("Left Wall");
+      }
+      // Right Wall
+      if (ir_data[2] < IR_near)
+      {
+        // Refresh();
+        analogWrite(PWM_LF, 20);
+        analogWrite(PWM_LB, 0);
+        analogWrite(PWM_RF, 25);
+        analogWrite(PWM_RB, 0);
+        delay(1000);
+        Serial.println("Right Wall");
+      }
+      // Back Wall
+      if (ir_data[3] < IR_near)
+      {
+        // Refresh();
+        analogWrite(PWM_LF, 100);
+        analogWrite(PWM_LB, 0);
+        analogWrite(PWM_RF, 100);
+        analogWrite(PWM_RB, 0);
+        delay(1000);
+        Serial.println("Back Wall");
+      }
+     // delay(1000);
+
+      // Avoid Blue
+      if (Color_blue_front())
+      {
+        // Refresh();
+        analogWrite(PWM_LF, 0);
+        analogWrite(PWM_LB, 25);
+        analogWrite(PWM_RF, 0);
+        analogWrite(PWM_RB, 55);
+        Serial.println("Avoid Blue");
+
+       delay(25);
+        return;
+      }
+
+      // Find Enermy
+      // Refresh();
+      analogWrite(PWM_LF, 30);
+      analogWrite(PWM_LB, 0);
+      analogWrite(PWM_RF, 0);
+      analogWrite(PWM_RB, 30);
+      Serial.println("Finding Enermy");
+    }
+  
+}
+/*
 void loop()
 {
   ReadCamData();
@@ -200,7 +371,6 @@ void loop()
         }
       }
     }
-    /****stop motor****/
     Serial.println("Something Found!");
     StopMotor();
   }
@@ -222,10 +392,11 @@ void loop()
       case LEFT:
       {
         Serial.println("LEFT");
+        
+        analogWrite(PWM_RF, 25);
+        analogWrite(PWM_LB, 25);
         analogWrite(PWM_RB, 0);
         analogWrite(PWM_LF, 0);
-        analogWrite(PWM_RF, 50);
-        analogWrite(PWM_LB, 50);
         break;
       }
       case RIGHT:
@@ -233,8 +404,8 @@ void loop()
         Serial.println("RIGHT");
         analogWrite(PWM_RF, 0);
         analogWrite(PWM_LB, 0);
-        analogWrite(PWM_LF, 50);
-        analogWrite(PWM_RB, 50);
+        analogWrite(PWM_LF, 25);
+        analogWrite(PWM_RB, 25);
         break;
       }
       case MID:
@@ -257,7 +428,7 @@ void loop()
         analogWrite(PWM_LB, 0);
         analogWrite(PWM_RB, 0);
         analogWrite(PWM_LF, 70);
-        analogWrite(PWM_RF, 50);
+        analogWrite(PWM_RF, 25);
 
         ;
       }
@@ -265,7 +436,7 @@ void loop()
       {
         analogWrite(PWM_LB, 0);
         analogWrite(PWM_RB, 0);
-        analogWrite(PWM_LF, 50);
+        analogWrite(PWM_LF, 25);
         analogWrite(PWM_RF, 70);
       }
 
@@ -282,24 +453,24 @@ void loop()
       Read_color();            //read!read!read!
       analogWrite(PWM_LB, 0);
       analogWrite(PWM_RB, 0);
-      analogWrite(PWM_LF, 200);
-      analogWrite(PWM_RF, 200);
+      analogWrite(PWM_LF, 100);
+      analogWrite(PWM_RF, 100);
 
       if (ReadIRSensor(0) <= IR_near && Color_red_front() == true) // 컬러 프뤈ㅌ 뤠드 인식- 후진
       {
         analogWrite(PWM_LF, 0);
         analogWrite(PWM_RF, 0);
-        analogWrite(PWM_LB, 200);
-        analogWrite(PWM_RB, 200);
-        delay(50);
+        analogWrite(PWM_LB, 100);
+        analogWrite(PWM_RB, 100);
+        delay(25);
         red_count++;
 
         if (red_count == 3)
         {
           analogWrite(PWM_RF, 0);
           analogWrite(PWM_LB, 0);
-          analogWrite(PWM_LF, 200);
-          analogWrite(PWM_RB, 200);
+          analogWrite(PWM_LF, 100);
+          analogWrite(PWM_RB, 100);
           red_count = 0;
         }
       }
@@ -315,7 +486,7 @@ void loop()
     {
       analogWrite(PWM_LB, 0);
       analogWrite(PWM_RB, 0);
-      analogWrite(PWM_LF, 50);
+      analogWrite(PWM_LF, 25);
       analogWrite(PWM_RF, 20);
 
       IR_Serial();
@@ -324,8 +495,8 @@ void loop()
       {
         analogWrite(PWM_LF, 0);
         analogWrite(PWM_RF, 0);
-        analogWrite(PWM_LB, 50);
-        analogWrite(PWM_RB, 50);
+        analogWrite(PWM_LB, 25);
+        analogWrite(PWM_RB, 25);
       }
     }
   }
@@ -337,7 +508,7 @@ void loop()
       analogWrite(PWM_LB, 0);
       analogWrite(PWM_RB, 0);
       analogWrite(PWM_LF, 20);
-      analogWrite(PWM_RF, 50);
+      analogWrite(PWM_RF, 25);
 
       IR_Serial();
       Read_color();                                              //read!read!read!
@@ -345,8 +516,8 @@ void loop()
       {
         analogWrite(PWM_LF, 0);
         analogWrite(PWM_RF, 0);
-        analogWrite(PWM_LB, 50);
-        analogWrite(PWM_RB, 50);
+        analogWrite(PWM_LB, 25);
+        analogWrite(PWM_RB, 25);
       }
     }
   }
@@ -357,8 +528,8 @@ void loop()
     {
       analogWrite(PWM_LB, 0);
       analogWrite(PWM_RB, 0);
-      analogWrite(PWM_LF, 50);
-      analogWrite(PWM_RF, 50);
+      analogWrite(PWM_LF, 25);
+      analogWrite(PWM_RF, 25);
     }
   }
   else
@@ -366,5 +537,5 @@ void loop()
     Serial.println("No Black Floor");
     StopMotor();
   }
-}
+}*/
 /***********loop finish***********/
